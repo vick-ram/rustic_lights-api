@@ -6,13 +6,11 @@ import io.ktor.server.auth.jwt.*
 import io.ktor.server.request.*
 import io.ktor.server.routing.*
 import vickram.tech.controllers.*
+import vickram.tech.models.Address
 import vickram.tech.models.Order
 import vickram.tech.models.Product
 import vickram.tech.models.User
-import vickram.tech.utils.NotFoundException
-import vickram.tech.utils.ORDER_STATUS
-import vickram.tech.utils.respondJson
-import vickram.tech.utils.toUUID
+import vickram.tech.utils.*
 
 fun Route.orderRoutes() {
     route("/cart") {
@@ -159,8 +157,71 @@ fun Route.orderRoutes() {
         }
     }
 
-    route("/address") {
+    authenticate {
+        route("/address") {
+            post {
+                try {
+                    val addressRequest = call.receive<Address>().validate()
+                    val address = createAddress(addressRequest)
+                    call.respondJson<Address>(
+                        true,
+                        "Address created",
+                        address,
+                        HttpStatusCode.Created
+                    )
+                } catch (e: BlankException) {
+                    call.respondJson<Any>(
+                        false,
+                        e.message ?: "Address cannot be blank",
+                        null,
+                        HttpStatusCode.BadRequest
+                    )
+                } catch (e: IllegalArgumentException) {
+                    call.respondJson<Any>(
+                        false,
+                        e.message ?: "Invalid address format",
+                        null,
+                        HttpStatusCode.BadRequest
+                    )
+                } catch (e: Exception) {
+                    call.respondJson<Any>(
+                        false,
+                        e.message ?: "An error occurred",
+                        null,
+                        HttpStatusCode.InternalServerError
+                    )
+                }
+            }
+            authenticate {
+                get {
+                    try {
+                        val principal = call.principal<JWTPrincipal>()
+                        val userId = principal?.payload?.subject
+                            ?: return@get call.respondJson<String>(
+                                false,
+                                "User not found",
+                                null,
+                                HttpStatusCode.BadRequest
+                            )
+                        val addresses = getAddresses(userId.toUUID())
+                        call.respondJson(
+                            true,
+                            "Addresses retrieved",
+                            addresses,
+                            HttpStatusCode.OK
+                        )
+                    } catch (e: Exception) {
+                        call.respondJson<Any>(
+                            false,
+                            e.message ?: "An error occurred",
+                            null,
+                            HttpStatusCode.InternalServerError
+                        )
+                    }
+                }
+            }
 
+        }
     }
 
     route("/orders") {

@@ -2,6 +2,7 @@ package vickram.tech.controllers
 
 import org.jetbrains.exposed.sql.and
 import vickram.tech.db.*
+import vickram.tech.models.Address
 import vickram.tech.models.Cart
 import vickram.tech.models.Order
 import vickram.tech.plugins.dbQuery
@@ -79,6 +80,25 @@ suspend fun deleteProductFromCart(userId: UUID, productId: UUID): Cart = dbQuery
     totalAmount = totalAmount.plus(product.price.times(cartItem.quantity.toBigDecimal()))
     cart.total = totalAmount
     return@dbQuery cart.toCart()
+}
+
+suspend fun createAddress(address: Address): Address = dbQuery {
+    val user = UserEntity.find { Users.id eq address.userId }.firstOrNull()
+        ?: throw NotFoundException("User not found")
+    val newAddress = AddressEntity.new {
+        this.user = user
+        this.name = address.name
+        this.phone = address.phone
+        this.county = address.county
+        this.city = address.city
+        this.address = address.address
+    }
+    return@dbQuery newAddress.toAddress()
+}
+
+suspend fun getAddresses(userId: UUID): List<Address> = dbQuery {
+    return@dbQuery AddressEntity.find { Addresses.userId eq userId }
+        .map(AddressEntity::toAddress)
 }
 
 suspend fun createOrder(order: Order): Order = dbQuery {

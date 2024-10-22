@@ -8,6 +8,7 @@ import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
+import vickram.tech.db.Addresses
 import vickram.tech.db.Categories
 import vickram.tech.db.Products
 import vickram.tech.db.Users
@@ -23,7 +24,7 @@ fun Application.configureDatabases() {
         )
     )
     transaction {
-        SchemaUtils.create(Users, Categories, Products)
+        SchemaUtils.create(Users, Categories, Products, Addresses)
     }
 
 }

@@ -80,6 +80,11 @@ data class Credential(
 }
 
 @Serializable
+data class RefreshToken(
+    val refreshToken: String
+)
+
+@Serializable
 data class Address(
     @Serializable(with = UUIDSerializer::class)
     val id: UUID = UUID.randomUUID(),

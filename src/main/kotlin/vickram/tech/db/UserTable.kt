@@ -4,7 +4,6 @@ import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.UUIDTable
-import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.javatime.datetime
 import vickram.tech.models.User
 import vickram.tech.utils.PGEnum
@@ -52,14 +51,4 @@ class UserEntity(id: EntityID<UUID>): UUIDEntity(id) {
         createdAt = createdAt,
         updatedAt = updatedAt
     )
-}
-
-object Addresses: UUIDTable("addresses") {
-    val userId = reference("user_id", Users, onDelete = ReferenceOption.CASCADE)
-    val address = text("address")
-    val city = varchar("city", 250)
-    val country = varchar("country", 250)
-    val postalCode = varchar("postal_code", 250)
-    val createdAt = datetime("created_at").default(LocalDateTime.now())
-    val updatedAt = datetime("updated_at").default(LocalDateTime.now())
 }

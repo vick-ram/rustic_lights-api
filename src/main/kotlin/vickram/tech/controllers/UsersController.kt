@@ -5,10 +5,10 @@ import vickram.tech.db.Users
 import vickram.tech.models.Credential
 import vickram.tech.models.User
 import vickram.tech.plugins.Payload
-import vickram.tech.plugins.TokenPair
 import vickram.tech.plugins.dbQuery
 import vickram.tech.plugins.makeJwt
 import vickram.tech.utils.NotFoundException
+import vickram.tech.utils.UnauthorizedException
 import vickram.tech.utils.hashPassword
 import vickram.tech.utils.verifyPassword
 import java.time.LocalDateTime
@@ -41,7 +41,7 @@ suspend fun createUser(user: User): User = dbQuery {
 suspend fun authenticateUser(
     credential: Credential,
     payload: Payload
-): TokenPair = dbQuery {
+): String = dbQuery {
     val user = UserEntity.find { Users.email eq credential.email }.firstOrNull()
     if (user == null) {
         throw IllegalArgumentException("User with email ${credential.email} not found")
@@ -49,12 +49,36 @@ suspend fun authenticateUser(
     if (!verifyPassword(credential.password, user.password)) {
         throw IllegalArgumentException("Password is incorrect")
     }
+
+    if (payload.expiresAt < System.currentTimeMillis()) {
+        throw UnauthorizedException("Token has expired")
+    }
     return@dbQuery makeJwt(
         payload = payload,
         email = user.email,
         userId = user.id.toString()
     )
 }
+
+/*suspend fun refreshTokenRequest(
+    refreshToken: RefreshToken,
+    payload: Payload
+): String = dbQuery {
+
+    val decodedJWT = JWT.require(Algorithm.HMAC256(payload.secret))
+        .withIssuer(payload.issuer)
+        .build()
+        .verify(refreshToken.refreshToken)
+
+    val userId = decodedJWT.subject.toUUID()
+    val user = getUser(userId)
+        ?: throw NotFoundException("User not found")
+    return@dbQuery makeJwt(
+        payload = payload,
+        email = user.email,
+        userId = user.id.toString()
+    )
+}*/
 
 suspend fun logout(token: String) {
     blackListToken(token)

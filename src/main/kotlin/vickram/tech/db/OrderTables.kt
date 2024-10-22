@@ -6,9 +6,11 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.javatime.datetime
+import vickram.tech.models.Address
 import vickram.tech.models.Order
 import vickram.tech.utils.ORDER_STATUS
 import vickram.tech.utils.PGEnum
+import java.time.LocalDateTime
 import java.util.*
 
 object Orders : UUIDTable("orders") {
@@ -20,8 +22,8 @@ object Orders : UUIDTable("orders") {
         { value -> ORDER_STATUS.valueOf(value as String) },
         { PGEnum("ORDER_STATUS", it) }
     )
-    val createdAt = datetime("created_at")
-    val updatedAt = datetime("updated_at")
+    val createdAt = datetime("created_at").default(LocalDateTime.now())
+    val updatedAt = datetime("updated_at").default(LocalDateTime.now())
 }
 
 class OrderEntity(id: EntityID<UUID>): UUIDEntity(id) {
@@ -63,4 +65,40 @@ class OrderItemEntity(id: EntityID<UUID>): UUIDEntity(id) {
         quantity = quantity,
         unitPrice = unitPrice
     )*/
+}
+
+object Addresses: UUIDTable("addresses") {
+    val userId = reference("user_id", Users, onDelete = ReferenceOption.CASCADE)
+    val name = varchar("name", 250)
+    val phone = varchar("phone", 250)
+    val county = varchar("county", 250)
+    val city = varchar("city", 250)
+    val address = text("address", eagerLoading = true)
+    val createdAt = datetime("created_at").default(LocalDateTime.now())
+    val updatedAt = datetime("updated_at").default(LocalDateTime.now())
+}
+
+class AddressEntity(id: EntityID<UUID>): UUIDEntity(id) {
+    companion object: UUIDEntityClass<AddressEntity>(Addresses)
+
+    var user by UserEntity referencedOn Addresses.userId
+    var name by Addresses.name
+    var phone by Addresses.phone
+    var county by Addresses.county
+    var city by Addresses.city
+    var address by Addresses.address
+    var createdAt by Addresses.createdAt
+    var updatedAt by Addresses.updatedAt
+
+    fun toAddress() = Address(
+        id = id.value,
+        userId = user.id.value,
+        name = name,
+        phone = phone,
+        county = county,
+        city = city,
+        address = address,
+        createdAt = createdAt,
+        updatedAt = updatedAt
+    )
 }

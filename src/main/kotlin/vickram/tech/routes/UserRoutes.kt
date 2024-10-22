@@ -7,10 +7,12 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import vickram.tech.controllers.*
 import vickram.tech.models.Credential
+import vickram.tech.models.RefreshToken
 import vickram.tech.models.User
 import vickram.tech.plugins.Payload
 import vickram.tech.utils.BlankException
 import vickram.tech.utils.NotFoundException
+import vickram.tech.utils.UnauthorizedException
 import vickram.tech.utils.respondJson
 import java.util.*
 
@@ -68,12 +70,52 @@ fun Route.userRoutes(payload: Payload) {
                         data = null,
                         status = HttpStatusCode.BadRequest
                     )
-                } catch (e: IllegalArgumentException) {
+                } catch (e: UnauthorizedException) {
                     call.respondJson<User>(
                         success = false,
                         message = e.message!!,
                         data = null,
+                        status = HttpStatusCode.Unauthorized
+                    )
+                } catch (e: IllegalArgumentException) {
+                    call.respondJson<Any>(
+                        success = false,
+                        message = e.message!!,
+                        data = null,
                         status = HttpStatusCode.BadRequest
+                    )
+                } catch (e: Exception) {
+                    call.respondJson<User>(
+                        success = false,
+                        message = e.message ?: "An error occurred",
+                        data = null,
+                        status = HttpStatusCode.InternalServerError
+                    )
+                }
+            }
+            post("refresh-token") {
+                val refreshToken = call.receive<RefreshToken>()
+                try {
+                    val tokenPair = refreshTokenRequest(refreshToken, payload)
+                    call.respondJson(
+                        success = true,
+                        message = "Token refreshed",
+                        data = tokenPair,
+                        status = HttpStatusCode.OK
+                    )
+                } catch (e: NotFoundException) {
+                    call.respondJson<User>(
+                        success = false,
+                        message = e.message!!,
+                        data = null,
+                        status = HttpStatusCode.NotFound
+                    )
+                } catch (e: UnauthorizedException) {
+                    call.respondJson<User>(
+                        success = false,
+                        message = e.message!!,
+                        data = null,
+                        status = HttpStatusCode.Unauthorized
                     )
                 } catch (e: Exception) {
                     call.respondJson<User>(
