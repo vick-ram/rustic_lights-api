@@ -7,6 +7,7 @@ import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.javatime.datetime
 import vickram.tech.models.*
+import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.util.*
 
@@ -123,6 +124,7 @@ object CartItems : UUIDTable("cart_items") {
     val productId = reference("product_id", Products, onDelete = ReferenceOption.CASCADE)
     val quantity = integer("quantity")
     val unitPrice = decimal("price", 10, 2)
+    val discount = decimal("discount", 10, 2).nullable()
 }
 
 class CartItemEntity(id: EntityID<UUID>): UUIDEntity(id) {
@@ -132,14 +134,20 @@ class CartItemEntity(id: EntityID<UUID>): UUIDEntity(id) {
     var product by ProductEntity referencedOn CartItems.productId
     var quantity by CartItems.quantity
     var unitPrice by CartItems.unitPrice
+    val discount by CartItems.discount
 
-    fun toCartItem() = CartItem(
-        id = id.value,
-        cartId = cart.id.value,
-        product = product.toProduct(),
-        quantity = quantity,
-        unitPrice = unitPrice
-    )
+    fun toCartItem(): CartItem {
+        val discountedAmount = discount ?: BigDecimal.ZERO
+        val discountedPrice = unitPrice - discountedAmount
+        return CartItem(
+            id = id.value,
+            cartId = cart.id.value,
+            product = product.toProduct(),
+            quantity = quantity,
+            unitPrice = unitPrice,
+            discountPrice = discountedPrice
+        )
+    }
 }
 
 object Reviews: UUIDTable("reviews") {

@@ -203,7 +203,7 @@ fun Route.productRoutes() {
             }
         }
 
-        authenticate {
+        authenticate("auth-jwt") {
             patch("/favourite/{id}") {
                 try {
                     val principal = call.principal<JWTPrincipal>()
@@ -234,7 +234,7 @@ fun Route.productRoutes() {
             }
         }
 
-        authenticate {
+        authenticate("auth-jwt") {
             get("/favourite") {
                 try {
                     val principal = call.principal<JWTPrincipal>()

@@ -106,6 +106,8 @@ data class CartItem(
     val quantity: Int,
     @Serializable(with = BigDecimalSerializer::class)
     val unitPrice: BigDecimal,
+    @Serializable(with = BigDecimalSerializer::class)
+    val discountPrice: BigDecimal
 )
 /*To be implemented later*/
 data class WishList(
