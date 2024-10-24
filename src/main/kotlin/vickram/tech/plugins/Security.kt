@@ -5,6 +5,7 @@ import com.auth0.jwt.algorithms.Algorithm
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
+import kotlinx.serialization.Serializable
 import vickram.tech.controllers.getUser
 import java.util.*
 
@@ -12,7 +13,7 @@ fun Application.configureSecurity(
     payload: Payload
 ) {
     authentication {
-        jwt {
+        jwt("auth-jwt") {
             realm = payload.realm ?: ""
             verifier(
                 JWT
@@ -42,6 +43,10 @@ data class Payload(
     val expiresAt: Long = System.currentTimeMillis()
 )
 
+@Serializable
+data class TokenResp(
+    val token: String
+)
 /*@Serializable
 data class TokenPair(
     val accessToken: String,
@@ -52,15 +57,16 @@ fun makeJwt(
     payload: Payload,
     email: String,
     userId: String,
-): String {
+): TokenResp {
     val jti = UUID.randomUUID().toString()
-    return JWT.create()
+    val newToken = JWT.create()
             .withIssuer(payload.issuer)
             .withClaim("email", email)
             .withAudience(payload.audience)
             .withSubject(userId)
             .withIssuedAt(Date(System.currentTimeMillis()))
-            .withExpiresAt(Date(payload.expiresAt + (1000 * 60 * 15)))
+            .withExpiresAt(Date(payload.expiresAt + (1000L * 60 * 60 * 24 * 365 )))
             .withJWTId(jti)
             .sign(Algorithm.HMAC256(payload.secret))
+    return TokenResp(newToken)
 }

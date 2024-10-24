@@ -12,7 +12,8 @@ import java.util.*
 
 object Products : UUIDTable("products") {
     val name = varchar("name", 250)
-    val description = text("description", eagerLoading = true)
+    val shortDescription = text("short_description", eagerLoading = true)
+    val longDescription = text("long_description", eagerLoading = true)
     val price = decimal("price", 10, 2)
     val quantity = integer("quantity")
     val sku = varchar("sku", 250)
@@ -32,7 +33,8 @@ class ProductEntity(id: EntityID<UUID>): UUIDEntity(id) {
     companion object: UUIDEntityClass<ProductEntity>(Products)
 
     var name by Products.name
-    var description by Products.description
+    var shortDescription by Products.shortDescription
+    var longDescription by Products.longDescription
     var price by Products.price
     var quantity by Products.quantity
     var sku by Products.sku
@@ -46,7 +48,8 @@ class ProductEntity(id: EntityID<UUID>): UUIDEntity(id) {
     fun toProduct() = Product(
         id = id.value,
         name = name,
-        description = description,
+        shortDescription = shortDescription,
+        detailedDescription = longDescription,
         price = price,
         quantity = quantity,
         sku = sku,
@@ -84,6 +87,8 @@ class CartEntity(id: EntityID<UUID>): UUIDEntity(id) {
 
     var user by UserEntity referencedOn Carts.userId
     var total by Carts.total
+
+    val items by CartItemEntity referrersOn CartItems.cartId
 
     fun toCart() = Cart(
         id = id.value,

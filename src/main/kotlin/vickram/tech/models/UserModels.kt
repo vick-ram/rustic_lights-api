@@ -59,7 +59,7 @@ data class Credential(
     val password: String
 ) {
     fun validate(): Credential {
-        if (email.isBlank()) {
+        if (email.lowercase().isBlank()) {
             throw BlankException("Email cannot be blank")
         }
 

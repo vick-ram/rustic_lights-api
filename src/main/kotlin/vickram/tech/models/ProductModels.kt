@@ -11,7 +11,8 @@ data class Product(
     @Serializable(with = UUIDSerializer::class)
     val id: UUID = UUID.randomUUID(),
     val name: String,
-    val description: String,
+    val shortDescription: String,
+    val detailedDescription: String,
     @Serializable(with = BigDecimalSerializer::class)
     val price: BigDecimal,
     val quantity: Int,
@@ -32,7 +33,11 @@ data class Product(
             throw BlankException("Product name cannot be blank")
         }
 
-        if (description.isBlank()) {
+        if (shortDescription.isBlank()) {
+            throw BlankException("Product description cannot be blank")
+        }
+
+        if (detailedDescription.isBlank()) {
             throw BlankException("Product description cannot be blank")
         }
 

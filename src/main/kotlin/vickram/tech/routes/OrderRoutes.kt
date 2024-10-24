@@ -14,7 +14,7 @@ import vickram.tech.utils.*
 
 fun Route.orderRoutes() {
     route("/cart") {
-        authenticate {
+        authenticate("auth-jwt") {
             post {
                 try {
                     val principal = call.principal<JWTPrincipal>()
@@ -65,7 +65,7 @@ fun Route.orderRoutes() {
             }
         }
 
-        authenticate {
+        authenticate("auth-jwt") {
             patch("/{productId}") {
                 try {
                     val userId = call.principal<JWTPrincipal>()?.payload?.subject?.toUUID()
@@ -114,7 +114,7 @@ fun Route.orderRoutes() {
             }
         }
 
-        authenticate {
+        authenticate("auth-jwt") {
             delete {
                 try {
                     val userId = call.principal<JWTPrincipal>()?.payload?.subject?.toUUID()
@@ -157,8 +157,9 @@ fun Route.orderRoutes() {
         }
     }
 
-    authenticate {
-        route("/address") {
+
+    route("/address") {
+        authenticate("auth-jwt") {
             post {
                 try {
                     val addressRequest = call.receive<Address>().validate()
@@ -192,35 +193,34 @@ fun Route.orderRoutes() {
                     )
                 }
             }
-            authenticate {
-                get {
-                    try {
-                        val principal = call.principal<JWTPrincipal>()
-                        val userId = principal?.payload?.subject
-                            ?: return@get call.respondJson<String>(
-                                false,
-                                "User not found",
-                                null,
-                                HttpStatusCode.BadRequest
-                            )
-                        val addresses = getAddresses(userId.toUUID())
-                        call.respondJson(
-                            true,
-                            "Addresses retrieved",
-                            addresses,
-                            HttpStatusCode.OK
-                        )
-                    } catch (e: Exception) {
-                        call.respondJson<Any>(
+        }
+        authenticate("auth-jwt") {
+            get {
+                try {
+                    val principal = call.principal<JWTPrincipal>()
+                    val userId = principal?.payload?.subject
+                        ?: return@get call.respondJson<String>(
                             false,
-                            e.message ?: "An error occurred",
+                            "User not found",
                             null,
-                            HttpStatusCode.InternalServerError
+                            HttpStatusCode.BadRequest
                         )
-                    }
+                    val addresses = getAddresses(userId.toUUID())
+                    call.respondJson(
+                        true,
+                        "Addresses retrieved",
+                        addresses,
+                        HttpStatusCode.OK
+                    )
+                } catch (e: Exception) {
+                    call.respondJson<Any>(
+                        false,
+                        e.message ?: "An error occurred",
+                        null,
+                        HttpStatusCode.InternalServerError
+                    )
                 }
             }
-
         }
     }
 

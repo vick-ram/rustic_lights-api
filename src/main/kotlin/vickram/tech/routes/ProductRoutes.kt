@@ -128,7 +128,8 @@ fun Route.productRoutes() {
         post {
             try {
                 var name: String? = null
-                var description: String? = null
+                var shortDescription: String? = null
+                var detailedDescription: String? = null
                 var price: BigDecimal? = null
                 var quantityInStock: Int? = null
                 var category: String? = null
@@ -141,7 +142,8 @@ fun Route.productRoutes() {
                         is PartData.FormItem -> {
                             when (part.name) {
                                 "name" -> name = part.value
-                                "description" -> description = part.value
+                                "shortDescription" -> shortDescription = part.value
+                                "detailedDescription" -> detailedDescription = part.value
                                 "price" -> price = BigDecimal(part.value)
                                 "quantityInStock" -> quantityInStock = part.value.toInt()
                                 "category" -> category = part.value
@@ -162,7 +164,8 @@ fun Route.productRoutes() {
                 val newProduct = createProduct(
                     Product(
                         name = name!!,
-                        description = description!!,
+                        shortDescription = shortDescription!!,
+                        detailedDescription = detailedDescription!!,
                         price = price!!,
                         quantity = quantityInStock!!,
                         category = category?.toUUID()!!,
@@ -220,7 +223,8 @@ fun Route.productRoutes() {
         put("/{id}") {
             try {
                 var name: String? = null
-                var description: String? = null
+                var shortDescription: String? = null
+                var detailedDescription: String? = null
                 var price: BigDecimal? = null
                 var quantityInStock: Int? = null
                 var category: String? = null
@@ -234,7 +238,8 @@ fun Route.productRoutes() {
                         is PartData.FormItem -> {
                             when (part.name) {
                                 "name" -> name = part.value
-                                "description" -> description = part.value
+                                "shortDescription" -> shortDescription = part.value
+                                "detailedDescription" -> detailedDescription = part.value
                                 "price" -> price = BigDecimal(part.value)
                                 "quantityInStock" -> quantityInStock = part.value.toInt()
                                 "category" -> category = part.value
@@ -259,7 +264,8 @@ fun Route.productRoutes() {
                     id,
                     Product(
                         name = name!!,
-                        description = description!!,
+                        shortDescription = shortDescription!!,
+                        detailedDescription = detailedDescription!!,
                         price = price!!,
                         quantity = quantityInStock!!,
                         category = category?.toUUID()!!,

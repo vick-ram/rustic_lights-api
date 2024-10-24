@@ -8,10 +8,20 @@ import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
-import vickram.tech.db.Addresses
-import vickram.tech.db.Categories
-import vickram.tech.db.Products
-import vickram.tech.db.Users
+import vickram.tech.db.*
+
+fun initTestDb() {
+    Database.connect(
+        url = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;",
+        driver = "org.h2.Driver",
+        user = "vickram",
+        password = "Vickram1234"
+    )
+    transaction {
+        exec("CREATE TYPE ROLE AS ENUM ('MERCHANT', 'CUSTOMER')")
+        SchemaUtils.create(Users, Categories, Products, Addresses)
+    }
+}
 
 fun Application.configureDatabases() {
     val config = environment.config
@@ -24,7 +34,7 @@ fun Application.configureDatabases() {
         )
     )
     transaction {
-        SchemaUtils.create(Users, Categories, Products, Addresses)
+        SchemaUtils.create(Users, Categories, Products, Addresses, Carts, CartItems)
     }
 
 }

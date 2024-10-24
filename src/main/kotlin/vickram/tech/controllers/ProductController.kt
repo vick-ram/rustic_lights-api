@@ -44,7 +44,8 @@ suspend fun createProduct(product: Product): Product = dbQuery {
 
     val newProduct = ProductEntity.new {
         this.name = product.name
-        this.description = product.description
+        this.shortDescription = product.shortDescription
+        this.longDescription = product.detailedDescription
         this.price = product.price
         this.quantity = product.quantity
         this.sku = generateRandomSku(16)
@@ -90,7 +91,8 @@ suspend fun updateProduct(
 
     dbProduct.apply {
         name = product.name
-        description = product.description
+        shortDescription = product.shortDescription
+        longDescription = product.detailedDescription
         price = product.price
         quantity = product.quantity
         sku = product.sku

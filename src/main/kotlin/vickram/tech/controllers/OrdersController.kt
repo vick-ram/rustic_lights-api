@@ -19,25 +19,32 @@ suspend fun addProductToCart(
     var totalAmount = BigDecimal.ZERO
     val user = UserEntity.find { Users.id eq userId }.firstOrNull()
         ?: throw NotFoundException("User not found")
-    val newCart = CartEntity.new {
-        this.user = user
-        this.total = totalAmount
-    }
+    val cart = CartEntity.find { Carts.userId eq user.id }.firstOrNull()
+        ?: CartEntity.new {
+            this.user = user
+            this.total = totalAmount
+        }
 
     val product =
         ProductEntity.find { Products.id eq productId }.firstOrNull()
             ?: throw NotFoundException("Product not found")
-    CartItemEntity.new {
-        this.cart = newCart
-        this.product = product
-        this.quantity = quantity
-        this.unitPrice = product.price
+    val cartItem = CartItemEntity.find {
+        (CartItems.cartId eq cart.id) and (CartItems.productId eq product.id)
+    }.firstOrNull()
+    if (cartItem != null) {
+        cartItem.quantity += quantity
+    } else {
+        CartItemEntity.new {
+            this.cart = cart
+            this.product = product
+            this.quantity = quantity
+            this.unitPrice = product.price
+        }
     }
-    totalAmount = totalAmount.plus(product.price.times(quantity.toBigDecimal()))
+    totalAmount = cart.items.sumOf { it.product.price * it.quantity.toBigDecimal() }
+    cart.total = totalAmount
 
-    newCart.total = totalAmount
-
-    return@dbQuery newCart.toCart()
+    return@dbQuery cart.toCart()
 }
 
 suspend fun updateProductCartQuantity(
@@ -126,7 +133,7 @@ suspend fun createOrder(order: Order): Order = dbQuery {
 }
 
 suspend fun updateOrderStatus(id: UUID, status: ORDER_STATUS): Order = dbQuery {
-    val order = OrderEntity.find { Orders.status.eq(status) }.firstOrNull()
+    val order = OrderEntity.find { Orders.id.eq(id) }.firstOrNull()
         ?: throw NotFoundException("Order not found")
     order.status = status
     return@dbQuery order.toOrder()
