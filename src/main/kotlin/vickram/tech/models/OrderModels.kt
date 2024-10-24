@@ -10,7 +10,8 @@ import java.util.*
 data class Order(
     @Serializable(with = UUIDSerializer::class)
     val id: UUID = UUID.randomUUID(),
-    val user: User,
+    @Serializable(with = UUIDSerializer::class)
+    val userId: UUID,
     val items: List<OrderItem> = emptyList(),
     @Serializable(with = BigDecimalSerializer::class)
     val total: BigDecimal,
@@ -28,12 +29,4 @@ data class OrderItem(
     val product: Product,
     val quantity: Int,
     val unitPrice: Double
-) {
-    fun validate(): OrderItem {
-        if (quantity <= 0) {
-            throw InvalidInputException("Quantity must be greater than zero")
-        }
-
-        return this
-    }
-}
+)

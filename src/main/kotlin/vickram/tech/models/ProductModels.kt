@@ -77,41 +77,36 @@ data class Category(
 }
 
 @Serializable
+data class UserFavourite(
+    @Serializable(with = UUIDSerializer::class)
+    val userId: UUID,
+    @Serializable(with = UUIDSerializer::class)
+    val productId: UUID,
+    val favourite: Boolean
+)
+
+@Serializable
 data class Cart(
     @Serializable(with = UUIDSerializer::class)
     val id: UUID = UUID.randomUUID(),
-    val user: User,
+    @Serializable(with = UUIDSerializer::class)
+    val userId: UUID,
     val items: List<CartItem> = emptyList(),
     @Serializable(with = BigDecimalSerializer::class)
     val total: BigDecimal,
-) {
-    fun validate(): Cart {
-        if (total < BigDecimal.ZERO) {
-            throw InvalidInputException("Total must be greater than zero")
-        }
-
-        return this
-    }
-}
+)
 
 @Serializable
 data class CartItem(
     @Serializable(with = UUIDSerializer::class)
     val id: UUID = UUID.randomUUID(),
-    val cart: Cart,
+    @Serializable(with = UUIDSerializer::class)
+    val cartId: UUID,
     val product: Product,
     val quantity: Int,
     @Serializable(with = BigDecimalSerializer::class)
     val unitPrice: BigDecimal,
-) {
-    fun validate(): CartItem {
-        if (quantity <= 0) {
-            throw InvalidInputException("Quantity must be greater than zero")
-        }
-
-        return this
-    }
-}
+)
 /*To be implemented later*/
 data class WishList(
     @Serializable(with = UUIDSerializer::class)

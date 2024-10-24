@@ -34,7 +34,15 @@ fun Application.configureDatabases() {
         )
     )
     transaction {
-        SchemaUtils.create(Users, Categories, Products, Addresses, Carts, CartItems)
+        SchemaUtils.create(
+            Users,
+            Categories,
+            Products,
+            Addresses,
+            Carts,
+            CartItems,
+            UserFavourites
+        )
     }
 
 }

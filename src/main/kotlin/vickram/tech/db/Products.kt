@@ -77,6 +77,26 @@ class CategoryEntity(id: EntityID<UUID>): UUIDEntity(id) {
     )
 }
 
+object UserFavourites : UUIDTable() {
+    val userId = reference("user_id", Users, onDelete = ReferenceOption.CASCADE)
+    val productId = reference("product_id", Products, onDelete = ReferenceOption.CASCADE)
+    val favourite = bool("favourite")
+}
+
+class UserFavouriteEntity(id: EntityID<UUID>) : UUIDEntity(id) {
+    companion object : UUIDEntityClass<UserFavouriteEntity>(UserFavourites)
+
+    var user by UserEntity referencedOn UserFavourites.userId
+    var product by ProductEntity referencedOn UserFavourites.productId
+    var favourite by UserFavourites.favourite
+
+    fun toUserFavourite() = UserFavourite(
+        userId = user.id.value,
+        productId = product.id.value,
+        favourite = favourite
+    )
+}
+
 object Carts : UUIDTable("carts") {
     val userId = reference("user_id", Users, onDelete = ReferenceOption.CASCADE)
     val total = decimal("total", 10, 2)
@@ -92,7 +112,8 @@ class CartEntity(id: EntityID<UUID>): UUIDEntity(id) {
 
     fun toCart() = Cart(
         id = id.value,
-        user = user.toUser(),
+        userId = user.id.value,
+        items = items.map { it.toCartItem() },
         total = total
     )
 }
@@ -111,6 +132,14 @@ class CartItemEntity(id: EntityID<UUID>): UUIDEntity(id) {
     var product by ProductEntity referencedOn CartItems.productId
     var quantity by CartItems.quantity
     var unitPrice by CartItems.unitPrice
+
+    fun toCartItem() = CartItem(
+        id = id.value,
+        cartId = cart.id.value,
+        product = product.toProduct(),
+        quantity = quantity,
+        unitPrice = unitPrice
+    )
 }
 
 object Reviews: UUIDTable("reviews") {

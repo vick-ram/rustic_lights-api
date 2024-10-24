@@ -89,6 +89,14 @@ suspend fun deleteProductFromCart(userId: UUID, productId: UUID): Cart = dbQuery
     return@dbQuery cart.toCart()
 }
 
+suspend fun getCart(userId: UUID): Cart = dbQuery {
+    val user = UserEntity.find { Users.id eq userId }.firstOrNull()
+        ?: throw NotFoundException("User not found")
+    val cart = CartEntity.find { Carts.userId eq user.id }.firstOrNull()
+        ?: throw NotFoundException("Cart not found")
+    return@dbQuery cart.toCart()
+}
+
 suspend fun createAddress(address: Address): Address = dbQuery {
     val user = UserEntity.find { Users.id eq address.userId }.firstOrNull()
         ?: throw NotFoundException("User not found")
@@ -109,7 +117,7 @@ suspend fun getAddresses(userId: UUID): List<Address> = dbQuery {
 }
 
 suspend fun createOrder(order: Order): Order = dbQuery {
-    val user = UserEntity.find { Users.id eq order.user.id }.firstOrNull()
+    val user = UserEntity.find { Users.id eq order.id }.firstOrNull()
         ?: throw NotFoundException("User not found")
     val newOrder = OrderEntity.new {
         this.user = user

@@ -2,6 +2,8 @@ package vickram.tech.routes
 
 import io.ktor.http.*
 import io.ktor.http.content.*
+import io.ktor.server.auth.*
+import io.ktor.server.auth.jwt.*
 import io.ktor.server.request.*
 import io.ktor.server.routing.*
 import vickram.tech.controllers.*
@@ -110,7 +112,12 @@ fun Route.productRoutes() {
     route("/products") {
         get {
             try {
-                val products = getProducts()
+                val searchQuery = call.request.queryParameters["search"]
+                val products = if (searchQuery != null) {
+                    searchProducts(searchQuery)
+                } else {
+                    getProducts()
+                }
                 call.respondJson(
                     success = true,
                     message = "Products retrieved successfully",
@@ -157,6 +164,7 @@ fun Route.productRoutes() {
                                 image = saveImage(part, "images")
                             }
                         }
+
                         else -> {}
                     }
                     part.dispose()
@@ -192,6 +200,60 @@ fun Route.productRoutes() {
                     data = null,
                     status = HttpStatusCode.InternalServerError
                 )
+            }
+        }
+
+        authenticate {
+            patch("/favourite/{id}") {
+                try {
+                    val principal = call.principal<JWTPrincipal>()
+                    val userId = principal?.subject
+                        ?: return@patch
+                    val productId = call.parameters["id"]
+                        ?: return@patch
+                    val favourite = call.request.queryParameters["favourite"]
+                        ?: return@patch
+                    val favouriteProduct = addProductToFavourites(
+                        userId.toUUID(),
+                        productId.toUUID(),
+                        favourite.toBoolean()
+                    )
+                    call.respondJson<Product>(
+                        success = true,
+                        message = "Product added to favourites",
+                        data = favouriteProduct
+                    )
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    call.respondJson<Product>(
+                        success = false,
+                        message = e.message!!,
+                        data = null
+                    )
+                }
+            }
+        }
+
+        authenticate {
+            get("/favourite") {
+                try {
+                    val principal = call.principal<JWTPrincipal>()
+                    val userId = principal?.subject
+                        ?: return@get
+                    val favouriteProducts = getUserFavourites(userId.toUUID())
+                    call.respondJson(
+                        success = true,
+                        message = "Favourite products retrieved successfully",
+                        data = favouriteProducts
+                    )
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    call.respondJson<Product>(
+                        success = false,
+                        message = e.message!!,
+                        data = null
+                    )
+                }
             }
         }
 
@@ -253,6 +315,7 @@ fun Route.productRoutes() {
                                 image = saveImage(part, "images")
                             }
                         }
+
                         else -> {}
                     }
                     part.dispose()

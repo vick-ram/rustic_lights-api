@@ -6,10 +6,7 @@ import io.ktor.server.auth.jwt.*
 import io.ktor.server.request.*
 import io.ktor.server.routing.*
 import vickram.tech.controllers.*
-import vickram.tech.models.Address
-import vickram.tech.models.Order
-import vickram.tech.models.Product
-import vickram.tech.models.User
+import vickram.tech.models.*
 import vickram.tech.utils.*
 
 fun Route.orderRoutes() {
@@ -33,11 +30,11 @@ fun Route.orderRoutes() {
                             HttpStatusCode.BadRequest
                         )
                     val quantity = call.request.queryParameters["quantity"]?.toIntOrNull() ?: 1
-                    addProductToCart(userId.toUUID(), productId.toUUID(), quantity)
-                    call.respondJson<Any>(
+                    val addedProduct = addProductToCart(userId.toUUID(), productId.toUUID(), quantity)
+                    call.respondJson<Cart>(
                         true,
                         "Product added to cart",
-                        null,
+                        addedProduct,
                         HttpStatusCode.Created
                     )
                 } catch (e: NotFoundException) {
@@ -61,6 +58,49 @@ fun Route.orderRoutes() {
                         null,
                         HttpStatusCode.InternalServerError
                     )
+                }
+            }
+
+            authenticate("auth-jwt") {
+                get {
+                    try {
+                        val principal = call.principal<JWTPrincipal>()
+                        val userId = principal?.payload?.subject
+                            ?: return@get call.respondJson<String>(
+                                false,
+                                "User not found",
+                                null,
+                                HttpStatusCode.BadRequest
+                            )
+                        val cart = getCart(userId.toUUID())
+                        call.respondJson<Cart>(
+                            true,
+                            "Cart retrieved",
+                            cart,
+                            HttpStatusCode.OK
+                        )
+                    } catch (e: NotFoundException) {
+                        call.respondJson<User>(
+                            false,
+                            e.message ?: "User not found",
+                            null,
+                            HttpStatusCode.NotFound
+                        )
+                    } catch (e: Exception) {
+                        call.respondJson<Any>(
+                            false,
+                            e.message ?: "An error occurred",
+                            null,
+                            HttpStatusCode.InternalServerError
+                        )
+                    } catch (e: Exception) {
+                        call.respondJson<Any>(
+                            false,
+                            e.message ?: "An error occurred",
+                            null,
+                            HttpStatusCode.InternalServerError
+                        )
+                    }
                 }
             }
         }

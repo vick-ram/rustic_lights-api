@@ -1,7 +1,8 @@
 package vickram.tech.controllers
 
-import vickram.tech.db.CategoryEntity
-import vickram.tech.db.ProductEntity
+import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.lowerCase
+import vickram.tech.db.*
 import vickram.tech.models.Category
 import vickram.tech.models.Product
 import vickram.tech.plugins.dbQuery
@@ -62,6 +63,38 @@ suspend fun createProduct(product: Product): Product = dbQuery {
 suspend fun getProducts(): List<Product> = dbQuery {
     ProductEntity
         .all()
+        .map { it.toProduct() }
+}
+
+suspend fun addProductToFavourites(userId: UUID, productId: UUID, favourite: Boolean): Product? = dbQuery {
+    val user = UserEntity.findById(userId) ?: return@dbQuery null
+    val product = ProductEntity.findById(productId) ?: return@dbQuery null
+
+    val userFavourite = UserFavouriteEntity.find {
+        (UserFavourites.userId eq user.id) and (UserFavourites.productId eq product.id)
+    }.firstOrNull()
+
+    if (userFavourite != null) {
+        userFavourite.favourite = favourite
+    } else {
+        UserFavouriteEntity.new {
+            this.user = user
+            this.product = product
+            this.favourite = favourite
+        }
+    }
+
+    return@dbQuery product.toProduct()
+}
+
+suspend fun getUserFavourites(userId: UUID): List<Product> = dbQuery {
+    return@dbQuery UserFavouriteEntity.find { UserFavourites.userId eq userId }
+        .map { it.product.toProduct() }
+}
+
+suspend fun searchProducts(query: String): List<Product> = dbQuery {
+    ProductEntity
+        .find { Products.name.lowerCase() like "%${query.lowercase()}%" }
         .map { it.toProduct() }
 }
 

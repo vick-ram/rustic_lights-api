@@ -37,7 +37,7 @@ class OrderEntity(id: EntityID<UUID>): UUIDEntity(id) {
 
     fun toOrder() = Order(
         id = id.value,
-        user = user.toUser(),
+        userId = user.id.value,
         total = total,
         status = status,
         createdAt = createdAt,
@@ -60,11 +60,6 @@ class OrderItemEntity(id: EntityID<UUID>): UUIDEntity(id) {
     var quantity by OrderItems.quantity
     var unitPrice by OrderItems.unitPrice
 
-    /*fun toOrderItem() = Order.OrderItem(
-        product = product.toProduct(),
-        quantity = quantity,
-        unitPrice = unitPrice
-    )*/
 }
 
 object Addresses: UUIDTable("addresses") {
