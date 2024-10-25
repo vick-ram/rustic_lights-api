@@ -15,7 +15,8 @@ data class Order(
     val items: List<OrderItem> = emptyList(),
     @Serializable(with = BigDecimalSerializer::class)
     val total: BigDecimal,
-    val status: ORDER_STATUS,
+    val status: ORDER_STATUS = ORDER_STATUS.PENDING,
+    val address: String,
     @Serializable(with = DateTimeSerializer::class)
     val createdAt: LocalDateTime = LocalDateTime.now(),
     @Serializable(with = DateTimeSerializer::class)
@@ -28,5 +29,6 @@ data class OrderItem(
     val id: UUID = UUID.randomUUID(),
     val product: Product,
     val quantity: Int,
-    val unitPrice: Double
+    @Serializable(with = BigDecimalSerializer::class)
+    val unitPrice: BigDecimal
 )

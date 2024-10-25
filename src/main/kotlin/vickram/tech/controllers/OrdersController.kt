@@ -39,6 +39,7 @@ suspend fun addProductToCart(
             this.product = product
             this.quantity = quantity
             this.unitPrice = product.price
+            this.discount = product.discount
         }
     }
     totalAmount = cart.items.sumOf { it.product.price * it.quantity.toBigDecimal() }
@@ -116,27 +117,30 @@ suspend fun getAddresses(userId: UUID): List<Address> = dbQuery {
         .map(AddressEntity::toAddress)
 }
 
-suspend fun createOrder(order: Order): Order = dbQuery {
-    val user = UserEntity.find { Users.id eq order.id }.firstOrNull()
-        ?: throw NotFoundException("User not found")
+suspend fun createOrder(userId: UUID): Order = dbQuery {
+    val userAddress = AddressEntity.find { Addresses.userId eq userId }.firstOrNull()
+        ?: throw NotFoundException("Address not found, please add an address")
+    val cart = CartEntity.find { Carts.userId eq userId }.firstOrNull()
+        ?: throw NotFoundException("Cart not found")
+    val add = "${userAddress.address}, ${userAddress.city}, ${userAddress.county}"
+    var total = BigDecimal.ZERO
     val newOrder = OrderEntity.new {
-        this.user = user
-        this.total = order.total
-        this.status = order.status
-        this.createdAt = order.createdAt
-        this.updatedAt = order.updatedAt
+        this.user = UserEntity[userId]
+        this.total = total
+        this.address = add
     }
-    order.items.forEach {
-        val product =
-            ProductEntity.find { Products.id eq it.product.id }.firstOrNull()
-                ?: throw NotFoundException("Product not found")
+    cart.items.forEach { cartItem ->
         OrderItemEntity.new {
             this.order = newOrder
-            this.product = product
-            this.quantity = it.quantity
-            this.unitPrice = it.unitPrice
+            this.product = cartItem.product
+            this.quantity = cartItem.quantity
+            this.unitPrice = cartItem.unitPrice
+            this.discount = cartItem.discount
         }
     }
+    total = cart.total
+    newOrder.total = total
+    cart.items.forEach { it.delete() }
     return@dbQuery newOrder.toOrder()
 }
 

@@ -41,7 +41,9 @@ fun Application.configureDatabases() {
             Addresses,
             Carts,
             CartItems,
-            UserFavourites
+            UserFavourites,
+            Orders,
+            OrderItems
         )
     }
 

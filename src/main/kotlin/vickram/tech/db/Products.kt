@@ -134,18 +134,16 @@ class CartItemEntity(id: EntityID<UUID>): UUIDEntity(id) {
     var product by ProductEntity referencedOn CartItems.productId
     var quantity by CartItems.quantity
     var unitPrice by CartItems.unitPrice
-    val discount by CartItems.discount
+    var discount by CartItems.discount
 
     fun toCartItem(): CartItem {
-        val discountedAmount = discount ?: BigDecimal.ZERO
-        val discountedPrice = unitPrice - discountedAmount
         return CartItem(
             id = id.value,
             cartId = cart.id.value,
             product = product.toProduct(),
             quantity = quantity,
             unitPrice = unitPrice,
-            discountPrice = discountedPrice
+            discountPrice = discount ?: BigDecimal.ZERO
         )
     }
 }

@@ -52,7 +52,7 @@ fun Route.orderRoutes() {
                         HttpStatusCode.NotFound
                     )
                 } catch (e: Exception) {
-                    call.respondJson<Any>(
+                    call.respondJson<String>(
                         false,
                         e.message ?: "An error occurred",
                         null,
@@ -87,14 +87,14 @@ fun Route.orderRoutes() {
                             HttpStatusCode.NotFound
                         )
                     } catch (e: Exception) {
-                        call.respondJson<Any>(
+                        call.respondJson<String>(
                             false,
                             e.message ?: "An error occurred",
                             null,
                             HttpStatusCode.InternalServerError
                         )
                     } catch (e: Exception) {
-                        call.respondJson<Any>(
+                        call.respondJson<String>(
                             false,
                             e.message ?: "An error occurred",
                             null,
@@ -130,21 +130,21 @@ fun Route.orderRoutes() {
                             HttpStatusCode.BadRequest
                         )
                     updateProductCartQuantity(userId, productId, quantity)
-                    call.respondJson<Any>(
+                    call.respondJson<String>(
                         true,
                         "Product quantity updated",
                         null,
                         HttpStatusCode.OK
                     )
                 } catch (e: NotFoundException) {
-                    call.respondJson<Any>(
+                    call.respondJson<String>(
                         false,
                         e.message ?: "Product not found",
                         null,
                         HttpStatusCode.NotFound
                     )
                 } catch (e: Exception) {
-                    call.respondJson<Any>(
+                    call.respondJson<String>(
                         false,
                         e.message ?: "An error occurred",
                         null,
@@ -172,21 +172,21 @@ fun Route.orderRoutes() {
                             HttpStatusCode.BadRequest
                         )
                     deleteProductFromCart(userId, productId)
-                    call.respondJson<Any>(
+                    call.respondJson<String>(
                         true,
                         "Product deleted from cart",
                         null,
                         HttpStatusCode.OK
                     )
                 } catch (e: NotFoundException) {
-                    call.respondJson<Any>(
+                    call.respondJson<String>(
                         false,
                         e.message ?: "Product not found",
                         null,
                         HttpStatusCode.NotFound
                     )
                 } catch (e: Exception) {
-                    call.respondJson<Any>(
+                    call.respondJson<String>(
                         false,
                         e.message ?: "An error occurred",
                         null,
@@ -211,21 +211,21 @@ fun Route.orderRoutes() {
                         HttpStatusCode.Created
                     )
                 } catch (e: BlankException) {
-                    call.respondJson<Any>(
+                    call.respondJson<String>(
                         false,
                         e.message ?: "Address cannot be blank",
                         null,
                         HttpStatusCode.BadRequest
                     )
                 } catch (e: IllegalArgumentException) {
-                    call.respondJson<Any>(
+                    call.respondJson<String>(
                         false,
                         e.message ?: "Invalid address format",
                         null,
                         HttpStatusCode.BadRequest
                     )
                 } catch (e: Exception) {
-                    call.respondJson<Any>(
+                    call.respondJson<String>(
                         false,
                         e.message ?: "An error occurred",
                         null,
@@ -253,7 +253,7 @@ fun Route.orderRoutes() {
                         HttpStatusCode.OK
                     )
                 } catch (e: Exception) {
-                    call.respondJson<Any>(
+                    call.respondJson<String>(
                         false,
                         e.message ?: "An error occurred",
                         null,
@@ -264,31 +264,38 @@ fun Route.orderRoutes() {
         }
     }
 
+
     route("/orders") {
-        post {
-            try {
-                val order = call.receive<Order>()
-                val newOrder = createOrder(order)
-                call.respondJson<Order>(
-                    true,
-                    "Order created",
-                    newOrder,
-                    HttpStatusCode.Created
-                )
-            } catch (e: NotFoundException) {
-                call.respondJson<Any>(
-                    false,
-                    e.message ?: "User not found",
-                    null,
-                    HttpStatusCode.NotFound
-                )
-            } catch (e: Exception) {
-                call.respondJson<Order>(
-                    false,
-                    e.message ?: "An error occurred",
-                    null,
-                    HttpStatusCode.InternalServerError
-                )
+        authenticate("auth-jwt") {
+            post {
+                try {
+                    val principal = call.principal<JWTPrincipal>()
+                    val userId = principal?.subject
+                        ?: return@post
+                    val newOrder = createOrder(userId.toUUID())
+                    call.respondJson<Order>(
+                        true,
+                        "Order created",
+                        newOrder,
+                        HttpStatusCode.Created
+                    )
+                } catch (e: NotFoundException) {
+                    e.printStackTrace()
+                    call.respondJson<String>(
+                        false,
+                        e.message ?: "User not found",
+                        null,
+                        HttpStatusCode.NotFound
+                    )
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    call.respondJson<String>(
+                        false,
+                        e.message ?: "An error occurred",
+                        null,
+                        HttpStatusCode.InternalServerError
+                    )
+                }
             }
         }
 
@@ -302,7 +309,7 @@ fun Route.orderRoutes() {
                     HttpStatusCode.OK
                 )
             } catch (e: Exception) {
-                call.respondJson<Any>(
+                call.respondJson<String>(
                     false,
                     e.message ?: "An error occurred",
                     null,
@@ -334,7 +341,7 @@ fun Route.orderRoutes() {
                     HttpStatusCode.OK
                 )
             } catch (e: Exception) {
-                call.respondJson<Any>(
+                call.respondJson<String>(
                     false,
                     e.message ?: "An error occurred",
                     null,
@@ -367,14 +374,14 @@ fun Route.orderRoutes() {
                     HttpStatusCode.OK
                 )
             } catch (e: NotFoundException) {
-                call.respondJson<Any>(
+                call.respondJson<String>(
                     false,
                     e.message ?: "Order not found",
                     null,
                     HttpStatusCode.NotFound
                 )
             } catch (e: Exception) {
-                call.respondJson<Any>(
+                call.respondJson<String>(
                     false,
                     e.message ?: "An error occurred",
                     null,
@@ -394,14 +401,14 @@ fun Route.orderRoutes() {
                     )
                 val deleted = deleteOrder(id)
                 if (deleted) {
-                    call.respondJson<Any>(
+                    call.respondJson<String>(
                         true,
                         "Order deleted",
                         null,
                         HttpStatusCode.OK
                     )
                 } else {
-                    call.respondJson<Any>(
+                    call.respondJson<String>(
                         false,
                         "Order not found",
                         null,
@@ -409,7 +416,7 @@ fun Route.orderRoutes() {
                     )
                 }
             } catch (e: Exception) {
-                call.respondJson<Any>(
+                call.respondJson<String>(
                     false,
                     e.message ?: "An error occurred",
                     null,

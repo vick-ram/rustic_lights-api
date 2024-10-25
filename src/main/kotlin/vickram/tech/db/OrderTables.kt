@@ -21,7 +21,8 @@ object Orders : UUIDTable("orders") {
         "ORDER_STATUS",
         { value -> ORDER_STATUS.valueOf(value as String) },
         { PGEnum("ORDER_STATUS", it) }
-    )
+    ).default(ORDER_STATUS.PENDING)
+    val address = text("address", eagerLoading = true)
     val createdAt = datetime("created_at").default(LocalDateTime.now())
     val updatedAt = datetime("updated_at").default(LocalDateTime.now())
 }
@@ -32,6 +33,7 @@ class OrderEntity(id: EntityID<UUID>): UUIDEntity(id) {
     var user by UserEntity referencedOn Orders.userId
     var total by Orders.total
     var status by Orders.status
+    var address by Orders.address
     var createdAt by Orders.createdAt
     var updatedAt by Orders.updatedAt
 
@@ -40,6 +42,7 @@ class OrderEntity(id: EntityID<UUID>): UUIDEntity(id) {
         userId = user.id.value,
         total = total,
         status = status,
+        address = address,
         createdAt = createdAt,
         updatedAt = updatedAt
     )
@@ -49,7 +52,8 @@ object OrderItems : UUIDTable("order_details") {
     val orderId = reference("order_id", Orders, onDelete = ReferenceOption.CASCADE)
     val productId = reference("product_id", Products, onDelete = ReferenceOption.CASCADE)
     val quantity = integer("quantity")
-    val unitPrice = double("price")
+    val unitPrice = decimal("price", 10, 2)
+    val discount = decimal("discount", 10, 2).nullable()
 }
 
 class OrderItemEntity(id: EntityID<UUID>): UUIDEntity(id) {
@@ -59,6 +63,7 @@ class OrderItemEntity(id: EntityID<UUID>): UUIDEntity(id) {
     var product by ProductEntity referencedOn OrderItems.productId
     var quantity by OrderItems.quantity
     var unitPrice by OrderItems.unitPrice
+    var discount by OrderItems.discount
 
 }
 
