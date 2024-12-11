@@ -5,6 +5,7 @@ import org.jetbrains.exposed.sql.lowerCase
 import vickram.tech.db.*
 import vickram.tech.models.Category
 import vickram.tech.models.Product
+import vickram.tech.models.Review
 import vickram.tech.plugins.dbQuery
 import vickram.tech.utils.generateRandomSku
 import java.time.LocalDateTime
@@ -136,5 +137,26 @@ suspend fun updateProduct(
     }
 
     return@dbQuery dbProduct.toProduct()
+}
+
+suspend fun addReviewToProduct(userId: UUID, productId: UUID, review: Review): Review? = dbQuery {
+    val product = ProductEntity.findById(productId) ?: return@dbQuery null
+    val user = UserEntity.findById(userId) ?: return@dbQuery null
+
+    val newReview = ReviewEntity.new {
+        this.product = product
+        this.user = user
+        this.rating = review.rating
+        this.commentTitle = review.commentTitle
+        this.comment = review.comment
+        this.helpful = review.helpful
+    }
+
+    return@dbQuery newReview.toReview()
+}
+
+suspend fun getReviewsForProduct(productId: UUID): List<Review> = dbQuery {
+    return@dbQuery ReviewEntity.find { Reviews.productId eq productId }
+        .map { it.toReview() }
 }
 

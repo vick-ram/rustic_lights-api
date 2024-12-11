@@ -151,7 +151,7 @@ class CartItemEntity(id: EntityID<UUID>): UUIDEntity(id) {
 object Reviews: UUIDTable("reviews") {
     val productId = reference("product_id", Products, onDelete = ReferenceOption.CASCADE)
     val userId = reference("user_id", Users, onDelete = ReferenceOption.CASCADE)
-    val rating = integer("rating")
+    val rating = integer("rating").default(0)
     val commentTitle = varchar("comment_title", 250).nullable()
     val comment = text("comment", eagerLoading = true)
     val helpful = integer("helpful").default(0)

@@ -9,7 +9,6 @@ import vickram.tech.plugins.TokenResp
 import vickram.tech.plugins.dbQuery
 import vickram.tech.plugins.makeJwt
 import vickram.tech.utils.NotFoundException
-import vickram.tech.utils.UnauthorizedException
 import vickram.tech.utils.hashPassword
 import vickram.tech.utils.verifyPassword
 import java.time.LocalDateTime
@@ -81,6 +80,14 @@ suspend fun getUsers(): List<User> = dbQuery {
     return@dbQuery UserEntity
         .all()
         .map(UserEntity::toUser)
+}
+
+suspend fun getUserByEmail(email: String): User = dbQuery {
+    return@dbQuery UserEntity
+        .find { Users.email eq email }
+        .firstOrNull()
+        ?.toUser()
+        ?: throw NotFoundException("User not found")
 }
 
 suspend fun updateUser(id: UUID, user: User): User? = dbQuery {

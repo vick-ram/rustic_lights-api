@@ -176,7 +176,7 @@ fun Route.orderRoutes() {
                         true,
                         "Product deleted from cart",
                         null,
-                        HttpStatusCode.OK
+                        HttpStatusCode.NoContent
                     )
                 } catch (e: NotFoundException) {
                     call.respondJson<String>(
@@ -299,7 +299,36 @@ fun Route.orderRoutes() {
             }
         }
 
-        get {
+        authenticate("auth-jwt") {
+            get {
+                try {
+                    val principal = call.principal<JWTPrincipal>()
+                    val userId = principal?.subject
+                        ?: return@get call.respondJson<String>(
+                            false,
+                            "User not found",
+                            null,
+                            HttpStatusCode.BadRequest
+                        )
+                    val orders = getUserOrders(userId.toUUID())
+                    call.respondJson(
+                        true,
+                        "Orders retrieved",
+                        orders,
+                        HttpStatusCode.OK
+                    )
+                } catch (e: Exception) {
+                    call.respondJson<String>(
+                        false,
+                        e.message ?: "An error occurred",
+                        null,
+                        HttpStatusCode.InternalServerError
+                    )
+                }
+            }
+        }
+
+/*        get {
             try {
                 val orders = getOrders()
                 call.respondJson(
@@ -316,7 +345,7 @@ fun Route.orderRoutes() {
                     HttpStatusCode.InternalServerError
                 )
             }
-        }
+        }*/
 
         get("/{id}") {
             try {

@@ -9,10 +9,8 @@ import io.ktor.server.routing.*
 import vickram.tech.controllers.*
 import vickram.tech.models.Category
 import vickram.tech.models.Product
-import vickram.tech.utils.BlankException
-import vickram.tech.utils.respondJson
-import vickram.tech.utils.saveImage
-import vickram.tech.utils.toUUID
+import vickram.tech.models.Review
+import vickram.tech.utils.*
 import java.math.BigDecimal
 import java.util.*
 
@@ -30,7 +28,8 @@ fun Route.productRoutes() {
                 call.respondJson<Category>(
                     success = false,
                     message = e.message!!,
-                    data = null
+                    data = null,
+                    status = HttpStatusCode.InternalServerError
                 )
             }
         }
@@ -48,13 +47,15 @@ fun Route.productRoutes() {
                 call.respondJson<Category>(
                     success = false,
                     message = e.message!!,
-                    data = null
+                    data = null,
+                    status = HttpStatusCode.BadRequest
                 )
             } catch (e: Exception) {
                 call.respondJson<Category>(
                     success = false,
                     message = e.message!!,
-                    data = null
+                    data = null,
+                    status = HttpStatusCode.InternalServerError
                 )
             }
         }
@@ -73,13 +74,15 @@ fun Route.productRoutes() {
                 call.respondJson<Category>(
                     success = false,
                     message = e.message!!,
-                    data = null
+                    data = null,
+                    status = HttpStatusCode.BadRequest
                 )
             } catch (e: Exception) {
                 call.respondJson<Category>(
                     success = false,
                     message = e.message!!,
-                    data = null
+                    data = null,
+                    status = HttpStatusCode.InternalServerError
                 )
             }
         }
@@ -98,13 +101,15 @@ fun Route.productRoutes() {
                 call.respondJson<Category>(
                     success = false,
                     message = e.message!!,
-                    data = null
+                    data = null,
+                    status = HttpStatusCode.BadRequest
                 )
             } catch (e: Exception) {
                 call.respondJson<Category>(
                     success = false,
                     message = e.message!!,
-                    data = null
+                    data = null,
+                    status = HttpStatusCode.InternalServerError
                 )
             }
         }
@@ -127,7 +132,8 @@ fun Route.productRoutes() {
                 call.respondJson<Product>(
                     success = false,
                     message = e.message!!,
-                    data = null
+                    data = null,
+                    status = HttpStatusCode.InternalServerError
                 )
             }
         }
@@ -228,7 +234,8 @@ fun Route.productRoutes() {
                     call.respondJson<Product>(
                         success = false,
                         message = e.message!!,
-                        data = null
+                        data = null,
+                        status = HttpStatusCode.InternalServerError
                     )
                 }
             }
@@ -251,7 +258,8 @@ fun Route.productRoutes() {
                     call.respondJson<Product>(
                         success = false,
                         message = e.message!!,
-                        data = null
+                        data = null,
+                        status = HttpStatusCode.InternalServerError
                     )
                 }
             }
@@ -277,7 +285,8 @@ fun Route.productRoutes() {
                 call.respondJson<Product>(
                     success = false,
                     message = e.message!!,
-                    data = null
+                    data = null,
+                    status = HttpStatusCode.InternalServerError
                 )
             }
         }
@@ -345,19 +354,22 @@ fun Route.productRoutes() {
                 call.respondJson<Product>(
                     success = false,
                     message = e.message!!,
-                    data = null
+                    data = null,
+                    status = HttpStatusCode.BadRequest
                 )
             } catch (e: IllegalArgumentException) {
                 call.respondJson<Product>(
                     success = false,
                     message = e.message!!,
-                    data = null
+                    data = null,
+                    status = HttpStatusCode.BadRequest
                 )
             } catch (e: Exception) {
                 call.respondJson<Product>(
                     success = false,
                     message = e.message!!,
-                    data = null
+                    data = null,
+                    status = HttpStatusCode.InternalServerError
                 )
             }
         }
@@ -370,19 +382,105 @@ fun Route.productRoutes() {
                 call.respondJson<Product>(
                     success = deleted,
                     message = if (deleted) "Product deleted successfully" else "Product not found",
-                    data = null
+                    data = null,
                 )
             } catch (e: IllegalArgumentException) {
                 call.respondJson<Product>(
                     success = false,
                     message = e.message!!,
-                    data = null
+                    data = null,
+                    status = HttpStatusCode.BadRequest
                 )
             } catch (e: Exception) {
                 call.respondJson<Product>(
                     success = false,
                     message = e.message!!,
-                    data = null
+                    data = null,
+                    status = HttpStatusCode.InternalServerError
+                )
+            }
+        }
+    }
+
+    route("/reviews") {
+        post("/{productId}") {
+            try {
+                val principal = call.principal<JWTPrincipal>()
+                val userId = principal?.subject
+                    ?: return@post
+                val review = call.receive<Review>()
+                val productId = call.parameters["productId"]
+                    ?: throw IllegalArgumentException("Invalid Product ID")
+                val newReview = addReviewToProduct(
+                    userId = userId.toUUID(),
+                    productId = productId.toUUID(),
+                    review = review.validate()
+                )
+                call.respondJson(
+                    success = true,
+                    message = "Review added successfully",
+                    data = newReview
+                )
+            } catch (e: InvalidInputException) {
+                e.printStackTrace()
+                call.respondJson<String>(
+                    success = false,
+                    message = e.message!!,
+                    data = null,
+                    status = HttpStatusCode.BadRequest
+                )
+            }catch (e: BlankException) {
+                e.printStackTrace()
+                call.respondJson<String>(
+                    success = false,
+                    message = e.message!!,
+                    data = null,
+                    status = HttpStatusCode.BadRequest
+                )
+            }catch (e: IllegalArgumentException) {
+                e.printStackTrace()
+                call.respondJson<String>(
+                    success = false,
+                    message = e.message!!,
+                    data = null,
+                    status = HttpStatusCode.BadRequest
+                )
+            }catch (e: Exception) {
+                e.printStackTrace()
+                call.respondJson<String>(
+                    success = false,
+                    message = e.message!!,
+                    data = null,
+                    status = HttpStatusCode.InternalServerError
+                )
+            }
+        }
+
+        get("/{productId}") {
+            try {
+                val productId = call.parameters["productId"]
+                    ?: throw IllegalArgumentException("Invalid Product ID")
+                val reviews = getReviewsForProduct(productId.toUUID())
+                call.respondJson(
+                    success = true,
+                    message = "Reviews retrieved successfully",
+                    data = reviews
+                )
+            } catch (e: IllegalArgumentException) {
+                e.printStackTrace()
+                call.respondJson<String>(
+                    success = false,
+                    message = e.message!!,
+                    data = null,
+                    status = HttpStatusCode.BadRequest
+                )
+            } catch (e: Exception) {
+                e.printStackTrace()
+                call.respondJson<String>(
+                    success = false,
+                    message = e.message!!,
+                    data = null,
+                    status = HttpStatusCode.InternalServerError
                 )
             }
         }

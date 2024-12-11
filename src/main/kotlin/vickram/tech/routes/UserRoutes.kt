@@ -75,14 +75,14 @@ fun Route.userRoutes(payload: Payload) {
                         status = HttpStatusCode.Unauthorized
                     )
                 } catch (e: IllegalArgumentException) {
-                    call.respondJson<Any>(
+                    call.respondJson<String>(
                         success = false,
                         message = e.message!!,
                         data = null,
                         status = HttpStatusCode.BadRequest
                     )
                 } catch (e: Exception) {
-                    call.respondJson<User>(
+                    call.respondJson<String>(
                         success = false,
                         message = e.message ?: "An error occurred",
                         data = null,
@@ -168,13 +168,25 @@ fun Route.userRoutes(payload: Payload) {
 
         get {
             try {
-                val users = getUsers()
-                call.respondJson(
-                    success = true,
-                    message = "Users retrieved",
-                    data = users,
-                    status = HttpStatusCode.OK
-                )
+                val email = call.request.queryParameters["email"]
+                if (email != null) {
+                    val user = getUserByEmail(email)
+                    call.respondJson(
+                        success = true,
+                        message = "User retrieved",
+                        data = user,
+                        status = HttpStatusCode.OK
+                    )
+                    return@get
+                } else {
+                    val users = getUsers()
+                    call.respondJson(
+                        success = true,
+                        message = "Users retrieved",
+                        data = users,
+                        status = HttpStatusCode.OK
+                    )
+                }
             } catch (e: Exception) {
                 e.printStackTrace()
                 call.respondJson<User>(

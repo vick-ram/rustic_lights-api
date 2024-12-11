@@ -47,11 +47,6 @@ data class Payload(
 data class TokenResp(
     val token: String
 )
-/*@Serializable
-data class TokenPair(
-    val accessToken: String,
-    val refreshToken: String,
-)*/
 
 fun makeJwt(
     payload: Payload,

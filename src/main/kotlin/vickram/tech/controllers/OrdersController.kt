@@ -71,7 +71,7 @@ suspend fun updateProductCartQuantity(
     return@dbQuery cart.toCart()
 }
 
-suspend fun deleteProductFromCart(userId: UUID, productId: UUID): Cart = dbQuery {
+suspend fun deleteProductFromCart(userId: UUID, productId: UUID): Boolean = dbQuery {
     var totalAmount = BigDecimal.ZERO
     val user = UserEntity.find { Users.id eq userId }.firstOrNull()
         ?: throw NotFoundException("User not found")
@@ -87,7 +87,7 @@ suspend fun deleteProductFromCart(userId: UUID, productId: UUID): Cart = dbQuery
     cartItem.delete()
     totalAmount = totalAmount.plus(product.price.times(cartItem.quantity.toBigDecimal()))
     cart.total = totalAmount
-    return@dbQuery cart.toCart()
+    return@dbQuery true
 }
 
 suspend fun getCart(userId: UUID): Cart = dbQuery {
@@ -149,6 +149,11 @@ suspend fun updateOrderStatus(id: UUID, status: ORDER_STATUS): Order = dbQuery {
         ?: throw NotFoundException("Order not found")
     order.status = status
     return@dbQuery order.toOrder()
+}
+
+suspend fun getUserOrders(userId: UUID): List<Order> = dbQuery {
+    return@dbQuery OrderEntity.find { Orders.userId.eq(userId) }
+        .map(OrderEntity::toOrder)
 }
 
 suspend fun getOrders(): List<Order> = dbQuery {
